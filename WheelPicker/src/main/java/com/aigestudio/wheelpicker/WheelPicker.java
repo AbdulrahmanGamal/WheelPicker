@@ -753,10 +753,13 @@ public class WheelPicker extends View implements IDebug, IWheelPicker, Runnable 
         return true;
     }
 
+    private boolean isClickablePosition(MotionEvent event) {
+        int newPosition = getNewPosition(event);
+        return newPosition > 0 && newPosition < mData.size();
+    }
+
     private void onClick(MotionEvent event) {
-        float diff = event.getY() - (getHeight() >> 1);
-        int items = (int) (diff / mItemHeight);
-        int newPosition = mCurrentItemPosition + items;
+        int newPosition = getNewPosition(event);
         if (isCyclic) {
             if (newPosition < 0) {
                 newPosition = mData.size() + newPosition;
@@ -764,13 +767,18 @@ public class WheelPicker extends View implements IDebug, IWheelPicker, Runnable 
                 newPosition = newPosition % mData.size();
             }
         }
-
-        if (newPosition > 0 && newPosition < mData.size()) {
+        if (isClickablePosition(event)) {
             setSelectedItemPosition(newPosition, true);
             isTouchTriggered = true;
             performClick();
         }
 
+    }
+
+    private int getNewPosition(MotionEvent event) {
+        float diff = event.getY() - (getHeight() >> 1);
+        int items = (int) (diff / mItemHeight);
+        return mCurrentItemPosition + items;
     }
 
     private int computeDistanceToEndPoint(int remainder) {
@@ -804,12 +812,17 @@ public class WheelPicker extends View implements IDebug, IWheelPicker, Runnable 
             isTouchTriggered = false;
         }
         if (mScroller.computeScrollOffset()) {
-            if (null != mOnWheelChangeListener)
-                mOnWheelChangeListener.onWheelScrollStateChanged(SCROLL_STATE_SCROLLING);
+            int position = (int) (-mScrollOffsetY / mItemHeight + mSelectedItemPosition) % mData.size();
 
-            mScrollOffsetY = mScroller.getCurrY();
-            postInvalidate();
-            mHandler.postDelayed(this, 16);
+            if (position > 0 && position < mData.size()) {
+                if (null != mOnWheelChangeListener)
+                    mOnWheelChangeListener.onWheelScrollStateChanged(SCROLL_STATE_SCROLLING);
+
+                mScrollOffsetY = mScroller.getCurrY();
+                postInvalidate();
+                mHandler.postDelayed(this, 16);
+            }
+
         }
     }
 
