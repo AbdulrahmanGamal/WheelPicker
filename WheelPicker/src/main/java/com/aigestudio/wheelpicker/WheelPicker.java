@@ -765,9 +765,12 @@ public class WheelPicker extends View implements IDebug, IWheelPicker, Runnable 
             }
         }
 
-        setSelectedItemPosition(newPosition, true);
-        isTouchTriggered = true;
-        performClick();
+        if (newPosition > 0 && newPosition < mData.size()) {
+            setSelectedItemPosition(newPosition, true);
+            isTouchTriggered = true;
+            performClick();
+        }
+
     }
 
     private int computeDistanceToEndPoint(int remainder) {
